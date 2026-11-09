@@ -1,0 +1,268 @@
+
+/**
+ * Friction-Formel-Workbook Kapitel 18 (R-TQP6, 0.6.9): [md_friction_workbook]
+ * Intensitätsprofil, Interventionsplan, 90-Tage-Plan mit .ics, Exit-ready-Score.
+ * Läuft im Browser (localStorage). Nur „Ergebnis per Mail“ sendet an MD_FORM_WEBHOOK (typ workbook).
+ */
+add_shortcode( 'md_friction_workbook', function () {
+	ob_start();
+	?>
+	<div class="md-wb md-bk-kef" id="md-wb">
+	  <ol class="md-wb-tabs" aria-label="Schritte des Workbooks"></ol>
+	  <div class="md-wb-bar" aria-hidden="true"><span></span></div>
+	  <div class="md-wb-stage" aria-live="polite"></div>
+	  <noscript><p>Für das Workbook bitte JavaScript aktivieren.</p></noscript>
+	</div>
+	<style>
+	.md-wb{--wb-a:var(--bk-accent,#E8401C);--wb-ink:#15212D;--wb-mut:#5B6670;--wb-line:#E3E7EB;--wb-soft:#F4EFE6;margin:0 0 2rem}
+	.md-wb-tabs{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;margin:0 0 .8rem;padding:0;counter-reset:none}
+	.md-wb-tabs li{margin:0}
+	.md-wb-tabs button{font:600 .82rem/1.2 Inter,Arial,sans-serif;letter-spacing:.02em;border:1px solid var(--wb-line);background:#fff;color:var(--wb-ink);padding:.45rem .7rem;border-radius:2px;cursor:pointer}
+	.md-wb-tabs button.is-cur{background:var(--wb-ink);color:#fff;border-color:var(--wb-ink)}
+	.md-wb-tabs button.is-done{border-color:var(--wb-a)}
+	.md-wb-bar{height:4px;background:var(--wb-line);margin:0 0 1.6rem}.md-wb-bar span{display:block;height:4px;width:0;background:var(--wb-a);transition:width .3s}
+	.md-wb h2{margin-top:0}.md-wb h3{margin:1.6rem 0 .4rem}
+	.md-wb-type{border:1px solid var(--wb-line);border-left:4px solid var(--wb-a);padding:1rem 1.2rem;margin:0 0 1.2rem;background:#fff}
+	.md-wb-type .md-wb-pos{font:600 .75rem/1.3 Inter,Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--wb-mut);margin:0 0 .6rem}
+	.md-wb-type ol{margin:0 0 .8rem;padding-left:1.3em}.md-wb-type li{margin-bottom:.5rem}
+	.md-wb textarea,.md-wb input[type=text],.md-wb input[type=date],.md-wb input[type=email]{width:100%;box-sizing:border-box;border:1px solid #C9CFD5;padding:.55rem .65rem;font:inherit;font-size:.95rem;background:#fff;border-radius:2px}
+	.md-wb textarea{min-height:3.2rem;resize:vertical}
+	.md-wb label.md-wb-l{display:block;font:600 .85rem/1.3 Inter,Arial,sans-serif;margin:.7rem 0 .25rem}
+	.md-wb-scale{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;margin:.4rem 0 0}
+	.md-wb-scale span.md-wb-sl{font:600 .75rem/1 Inter,Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--wb-mut);margin-right:.4rem}
+	.md-wb-scale button{width:2.4rem;height:2.4rem;border:1px solid #C9CFD5;background:#fff;font:600 1rem/1 Inter,Arial,sans-serif;cursor:pointer;border-radius:2px;color:var(--wb-ink)}
+	.md-wb-scale button.is-sel{background:var(--wb-a);border-color:var(--wb-a);color:#fff}
+	.md-wb-hint{font-size:.85rem;color:var(--wb-mut);margin:.4rem 0 0}
+	.md-wb-prof{margin:1rem 0;padding:1rem 1.2rem;background:var(--wb-soft)}
+	.md-wb-row{display:grid;grid-template-columns:11rem 1fr 2.2rem;gap:.6rem;align-items:center;margin:.35rem 0;font-size:.95rem}
+	.md-wb-row .md-wb-track{height:12px;background:#fff;border-radius:6px;overflow:hidden}.md-wb-row .md-wb-track i{display:block;height:12px;background:var(--wb-ink)}
+	.md-wb-row.is-prim{font-weight:700}.md-wb-row.is-prim .md-wb-track i{background:var(--wb-a)}
+	.md-wb-box{border-left:4px solid var(--wb-a);background:var(--wb-soft);padding:.8rem 1rem;margin:1rem 0}
+	.md-wb-box p{margin:0}.md-wb-box p+p{margin-top:.5rem}
+	.md-wb ul.md-wb-not{margin:.3rem 0 0;padding-left:1.2em}
+	.md-wb details{border:1px solid var(--wb-line);padding:.6rem 1rem;margin:.6rem 0;background:#fff}.md-wb summary{cursor:pointer;font-weight:600}
+	.md-wb table.md-wb-t{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.95rem}
+	.md-wb table.md-wb-t th,.md-wb table.md-wb-t td{border-bottom:1px solid var(--wb-line);padding:.6rem .5rem;text-align:left;vertical-align:top}
+	.md-wb table.md-wb-t th{font:600 .75rem/1.3 Inter,Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--wb-mut)}
+	.md-wb-ex{display:grid;grid-template-columns:1fr 7rem 2.4rem;gap:.8rem;align-items:center;padding:.7rem 0;border-bottom:1px solid var(--wb-line)}
+	.md-wb-ex small{display:block;color:var(--wb-mut);font-size:.85rem}
+	.md-wb-ex input[type=range]{width:100%;accent-color:var(--wb-a)}
+	.md-wb-ex b.md-wb-v{text-align:right;font-size:1.1rem}
+	.md-wb-score{font:700 2.8rem/1 "Playfair Display",Georgia,serif;margin:1rem 0 .2rem}
+	.md-wb-amp{display:inline-block;padding:.25rem .6rem;font:600 .8rem/1.2 Inter,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#fff}
+	.md-wb-nav{display:flex;justify-content:space-between;gap:1rem;margin:1.8rem 0 0;flex-wrap:wrap}
+	.md-wb button.md-wb-go,.md-wb a.md-wb-go{background:var(--wb-ink);color:#fff;border:0;padding:.8rem 1.3rem;font:600 .95rem/1.2 Inter,Arial,sans-serif;cursor:pointer;border-radius:2px;text-decoration:none;display:inline-block}
+	.md-wb button.md-wb-back{background:#fff;color:var(--wb-ink);border:1px solid var(--wb-ink);padding:.8rem 1.3rem;font:600 .95rem/1.2 Inter,Arial,sans-serif;cursor:pointer;border-radius:2px}
+	.md-wb-tie{margin:.6rem 0 0}.md-wb-tie label{display:block;margin:.2rem 0}
+	.md-wb-mail{border:1px solid var(--wb-line);padding:1rem 1.2rem;margin:1.4rem 0;background:#fff}
+	.md-wb-mail .md-wb-chk{display:flex;gap:.5rem;align-items:flex-start;font-size:.85rem;margin:.6rem 0}
+	.md-wb-sum p{margin:.2rem 0}
+	@media (max-width:640px){.md-wb-row{grid-template-columns:7.5rem 1fr 2rem}.md-wb-ex{grid-template-columns:1fr 5rem 2rem}}
+	@media print{
+	  body *{visibility:hidden}
+	  #md-wb,#md-wb *{visibility:visible}
+	  #md-wb{position:absolute;left:0;top:0;width:100%}
+	  .md-wb-tabs,.md-wb-bar,.md-wb-nav,.md-wb-mail,.md-wb-noprint{display:none!important}
+	  .md-wb-type,.md-wb-prof,.md-wb-box{break-inside:avoid}
+	}
+	</style>
+	<script>
+	(function(){
+	var root=document.getElementById('md-wb'); if(!root) return;
+	var HOOK=<?php echo wp_json_encode( MD_FORM_WEBHOOK ); ?>, AMZ='https://www.amazon.de/dp/3800682869/', KEY='md-wb-v1';
+	var TY=[
+	 {k:'growth',n:'Growth Friction',pos:'Können nicht · Person',
+	  q:['Hat eine Führungskraft in den letzten 90 Tagen eine Aufgabe übernommen, bei der echtes Scheitern möglich war?','Kommt jemand mit einem Problem: Bringt er einen Vorschlag mit oder nur das Problem?','Würde ich eine Führungskraft eine Ebene über ihr einsetzen, oder halte ich sie instinktiv davon fern?'],
+	  sub:'Fähigkeiten durch herausfordernde Aufgaben entwickeln',
+	  m:'Welche konkrete Aufgabe setze ich bewusst über das bisherige Komfort-Niveau?',f:['Aufgabe','Führungskraft','Startdatum'],
+	  not:['Kein Briefing für jede Detailfrage.','Kein Rescue bei Schwierigkeiten, nur Orientierungsfragen.','Kein Tadel nach Scheitern, sondern ein strukturiertes Debriefing.'],
+	  trap:'Der CEO greift ein, sobald die Führungskraft unsicher wird, weil er das Ergebnis nicht riskieren will. Genau hier ist Growth Friction am schwierigsten und am wichtigsten. Einmal nachgeben setzt das Signal zurück.'},
+	 {k:'decision',n:'Decision Friction',pos:'Tun nicht · Person',
+	  q:['Wie viele Entscheidungen wurden letzte Woche zu mir eskaliert, die bei einer Woche Abwesenheit selbst hätten getroffen werden müssen?','Wenn jemand eskaliert: Kommt er mit Empfehlung und Frage oder nur mit einer offenen Situation?','Hat jemand in den letzten 30 Tagen eine Entscheidung im eigenen Bereich getroffen, ohne mich zu informieren?'],
+	  sub:'Kritisches Denken durch weniger Antworten erzwingen',
+	  m:'Welche Entscheidungstypen delegiere ich ab sofort vollständig?',f:['Entscheidungstyp','Rahmen aus Budget, Risiko und Zeit','Kommunikation an die Person'],
+	  not:['Keine Antwort auf Entscheidungsfragen, nur die Gegenfrage: „Was würden Sie tun, wenn ich nicht erreichbar wäre?“','Kein Feedback, wenn die Entscheidung im Rahmen lag.','Keine Bestätigung, dass sie richtig war.'],
+	  trap:'Die Führungskraft entscheidet falsch, der CEO bereut, nicht eingegriffen zu haben, und greift nächstes Mal früher ein. Damit ist Decision Friction zerstört. Der Fehler ist nicht der Beweis, dass sie falsch war, sondern dass sie wirkt.'},
+	 {k:'ownership',n:'Ownership Friction',pos:'Tun nicht · Team/System',
+	  q:['Wenn ein Projekt schiefgeht: Wer trägt die Konsequenz nach außen, ich oder das Team?','Hat das Team in den letzten drei Monaten eine Entscheidung vollständig ohne mein Mitwirken getragen, inklusive Konsequenz?','Wenn ich sage „Das ist euer Projekt“: Übernehmen sie sofort, oder warten sie auf mein erstes Feedback?'],
+	  sub:'Verantwortung durch echte Konsequenzen übertragen',
+	  m:'Welches Projekt übergebe ich vollständig, ohne Rückfalltür?',f:['Projekt','Team oder Person','Übergabedatum'],
+	  not:['Kein Senior-Review vor Kundenkontakt.','Kein Abpuffern von direktem Kundenfeedback.','Kein letztes Wort bei der finalen Entscheidung.','Fehler nicht intern lösen, bevor das Team sie selbst erlebt.'],
+	  trap:'Das Team liefert unter Niveau, der CEO steigt wieder ein, weil der Kunde wichtiger erscheint als das Prinzip: der häufigste Rückfall. Die erste vollständige Übergabe ist nie perfekt. Sie ist trotzdem nötig.'},
+	 {k:'innovation',n:'Innovation Friction',pos:'Können nicht · Team/System',
+	  q:['Wann hat mein Team zuletzt einen Ansatz vorgeschlagen, den ich nicht kannte und auch nicht hätte vorschlagen können?','Haben wir in den letzten sechs Monaten ein Projekt mit bewusst eingeschränkten Ressourcen als Experiment erprobt?','Wenn das nächste Budget halbiert würde: Hätte mein Team sofort andere Ideen?'],
+	  sub:'Kreativität durch bewusste Constraints entfachen',
+	  m:'Welche Ressource schränke ich ein: Budget, Zeit oder Teamgröße?',f:['Projekt','Einschränkung','Formulierung an das Team'],
+	  not:['Die Einschränkung nicht als Strafe formulieren, sondern als Bedingung.','Keine Lösungsvorgabe, nur das Ziel.','Keine externe Ressource als Kompensation.'],
+	  trap:'Das Team fordert zusätzliche Ressourcen, der CEO gibt nach, und Innovation Friction wird zur leeren Ankündigung. Die Constraint muss halten. Hält sie nicht, war sie keine sinnvolle Constraint.'}
+	];
+	var PH=[
+	 {t:'Phase 1 · Tag 1 bis 30',f:'Diagnose und Vorbereitung: Intensitätsprofil erstellen, primären Typ wählen, erste Maßnahme definieren und kommunizieren, wöchentlichen Friction-Check einführen.',c:'Hat die erste Maßnahme mindestens einmal stattgefunden? Gibt es Widerstand, und halte ich ihn aus?',d:30},
+	 {t:'Phase 2 · Tag 31 bis 60',f:'Implementierung und Rebellion: Konsistenz aufbauen, Widerstand erwarten und nicht nachgeben, ersten messbaren Effekt beobachten, zweiten Typ identifizieren.',c:'Ist das Verhaltensmuster sichtbar anders als an Tag 1? Habe ich in 30 Tagen mindestens dreimal konsistent gehalten?',d:60},
+	 {t:'Phase 3 · Tag 61 bis 90',f:'Intensivierung und Review: zweiten Typ integrieren, Quarterly Review vorbereiten, nächsten Zyklus planen.',c:'Quarterly Review: Profil vorher und nachher vergleichen. Nächster Zyklus mit zwei Typen gleichzeitig.',d:90}
+	];
+	var EX=[
+	 {n:'Strategische Entscheidungsfähigkeit',i:'Das Team trifft Richtungsentscheidungen im Rahmen selbstständig, ohne CEO-Input.',w:'wächst durch Decision Friction'},
+	 {n:'Operative Exzellenz',i:'Abwicklung, Qualitätssicherung und Kundenkommunikation laufen auf hohem Niveau ohne CEO.',w:'wächst durch Ownership Friction'},
+	 {n:'Qualität unabhängig vom CEO',i:'Standards sind internalisiert, nicht kontrolliert.',w:'wächst durch Growth Friction'},
+	 {n:'Kundenbeziehungen',i:'Schlüsselkunden haben eine eigenständige Beziehung zum Team.',w:'wächst durch alle vier Typen'}
+	];
+	var STEPS=['Start','1 Profil','2 Plan','3 90 Tage','4 Exit-ready','Ergebnis'];
+	var st={step:0,int:[null,null,null,null],notes:{},prim:null,plan:{},planNote:'',start:'',exit:[5,5,5,5]};
+	try{var sv=JSON.parse(localStorage.getItem(KEY)||'null'); if(sv&&typeof sv==='object') for(var kk in st) if(sv[kk]!==undefined) st[kk]=sv[kk];}catch(e){}
+	function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+	var stage=root.querySelector('.md-wb-stage'), tabs=root.querySelector('.md-wb-tabs'), bar=root.querySelector('.md-wb-bar span');
+	function el(t,c,x){var e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e;}
+	function btn(t,c,f){var b=el('button',c,t); b.type='button'; b.addEventListener('click',f); return b;}
+	function para(t,c){return el('p',c,t);}
+	function filled(){return st.int.every(function(v){return v!==null;});}
+	function primList(){ if(!filled()) return []; var mn=Math.min.apply(null,st.int); return TY.map(function(t,j){return j;}).filter(function(j){return st.int[j]===mn;}); }
+	function prim(){ var l=primList(); if(!l.length) return null; if(l.length===1) return l[0]; return (st.prim!==null&&l.indexOf(st.prim)>=0)?st.prim:null; }
+	function nextMonday(){var d=new Date(); d.setHours(12,0,0,0); var w=d.getDay(); d.setDate(d.getDate()+((8-w)%7||7)); return d.toISOString().slice(0,10);}
+	function addDays(s,n){var d=new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return d;}
+	var WD=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+	function fmt(d){return WD[d.getDay()]+', '+('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear();}
+	function exSum(){return st.exit.reduce(function(a,b){return a+(+b||0);},0);}
+	function amp(s){return s>=35?['Exit-ready','#2F8F6A']:(s>=25?['Auf Kurs','#C98A00']:['Hohe Abhängigkeit','#C2330F']);}
+	function goto(n){st.step=n; save(); render(); root.scrollIntoView({behavior:'smooth',block:'start'});}
+	function navRow(back,nextT,nextF){var n=el('div','md-wb-nav'); if(back) n.appendChild(btn('Zurück','md-wb-back',function(){goto(st.step-1);})); else n.appendChild(el('span')); if(nextT) n.appendChild(btn(nextT,'md-wb-go',nextF)); return n;}
+	function profile(){
+	  var box=el('div','md-wb-prof'); box.appendChild(el('p','md-kicker','Ihr Intensitätsprofil'));
+	  var p=prim();
+	  TY.forEach(function(t,j){var r=el('div','md-wb-row'+(p===j?' is-prim':'')); r.appendChild(el('span',null,t.n)); var tr=el('span','md-wb-track'), b=el('i'); b.style.width=((st.int[j]||0)/5*100)+'%'; tr.appendChild(b); r.appendChild(tr); r.appendChild(el('b',null,st.int[j]===null?'?':String(st.int[j]))); box.appendChild(r);});
+	  return box;
+	}
+	function tabsRender(){tabs.textContent=''; STEPS.forEach(function(s,j){var li=el('li'); var b=btn(s,(j===st.step?'is-cur':'')+(j<st.step?' is-done':''),function(){goto(j);}); li.appendChild(b); tabs.appendChild(li);}); bar.style.width=Math.round(st.step/(STEPS.length-1)*100)+'%';}
+	function render(){
+	  tabsRender(); stage.textContent=''; var s=st.step;
+	  if(s===0){
+	    stage.appendChild(el('p','md-kicker','Kapitel 18 · Das Friction-Formel-Modell'));
+	    stage.appendChild(el('h2',null,'Ihr Workbook in vier Schritten'));
+	    stage.appendChild(para('Friction scheitert an Inkonsistenz, an falscher Diagnose, an dem Moment, in dem die Führungskraft beim ersten Widerstand nachgibt, und an der Überzeugung, man brauche ein ideales Umfeld, um anzufangen. Das braucht man nicht. Man braucht eine ehrliche Diagnose und die Bereitschaft, das Unbehagen der ersten Wochen auszuhalten.'));
+	    var ul=el('ol'); ['Intensitätsprofil: Sie bewerten die vier Friction-Typen und finden Ihren primären Typ.','Interventionsplan: Sie legen die erste Maßnahme fest, konkret und personenbezogen.','90-Tage-Plan: drei Phasen mit Checkpoints als Termine für Ihren Kalender.','Exit-ready: wie unabhängig Ihr Unternehmen schon von Ihnen ist.'].forEach(function(x){ul.appendChild(el('li',null,x));}); stage.appendChild(ul);
+	    stage.appendChild(para('Rechnen Sie mit etwa 30 Minuten. Ihre Eingaben bleiben in diesem Browser, gespeichert oder übertragen wird nichts. Am Ende können Sie das Ergebnis drucken oder sich per Mail schicken.','md-wb-hint'));
+	    var n=el('div','md-wb-nav'); n.appendChild(btn(filled()?'Weiter, wo ich war':'Workbook starten','md-wb-go',function(){goto(1);}));
+	    if(filled()) n.appendChild(btn('Neu beginnen','md-wb-back',function(){ st={step:1,int:[null,null,null,null],notes:{},prim:null,plan:{},planNote:'',start:'',exit:[5,5,5,5]}; save(); render(); }));
+	    stage.appendChild(n); return;
+	  }
+	  if(s===1){
+	    stage.appendChild(el('p','md-kicker','Schritt 1 von 4'));
+	    stage.appendChild(el('h2',null,'Ihr Friction-Intensitätsprofil'));
+	    stage.appendChild(para('Beantworten Sie für jeden Typ zuerst die drei Leitfragen, dann bewerten Sie die Intensität von 0 (nicht vorhanden) bis 5 (vollständig integriert). 2 heißt inkonsistent, „das Sigma fehlt“; 4 heißt systematisch, mit sichtbarer Wirkung. Notizen sind freiwillig.'));
+	    TY.forEach(function(t,j){
+	      var c=el('div','md-wb-type'); c.appendChild(el('h3',null,t.n)); c.appendChild(el('p','md-wb-pos',t.pos));
+	      var ol=el('ol'); t.q.forEach(function(q,qi){var li=el('li',null,q); var ta=el('textarea'); ta.rows=2; ta.setAttribute('aria-label','Notiz zu Frage '+(qi+1)+' '+t.n); ta.placeholder='Notiz (optional)'; var key=t.k+qi; ta.value=st.notes[key]||''; ta.addEventListener('input',function(){st.notes[key]=ta.value.slice(0,600); save();}); li.appendChild(ta); ol.appendChild(li);}); c.appendChild(ol);
+	      var sc=el('div','md-wb-scale'); sc.setAttribute('role','group'); sc.setAttribute('aria-label','Intensität '+t.n); sc.appendChild(el('span','md-wb-sl','Intensität'));
+	      for(var v=0;v<=5;v++){(function(v){var b=btn(String(v),st.int[j]===v?'is-sel':'',function(){st.int[j]=v; save(); render();}); b.setAttribute('aria-pressed',st.int[j]===v?'true':'false'); sc.appendChild(b);})(v);}
+	      c.appendChild(sc); stage.appendChild(c);
+	    });
+	    stage.appendChild(profile());
+	    var pl=primList();
+	    if(filled()&&pl.length>1){
+	      var tie=el('div','md-wb-box'); tie.appendChild(para('Gleichstand: '+pl.map(function(j){return TY[j].n;}).join(' und ')+' haben dieselbe niedrigste Intensität. Starten Sie mit dem Typ, der das größte strategische Potenzial hat:'));
+	      var w=el('div','md-wb-tie'); pl.forEach(function(j){var l=el('label'); var r=el('input'); r.type='radio'; r.name='wbtie'; r.checked=st.prim===j; r.addEventListener('change',function(){st.prim=j; save(); render();}); l.appendChild(r); l.appendChild(document.createTextNode(' '+TY[j].n)); w.appendChild(l);}); tie.appendChild(w); stage.appendChild(tie);
+	    } else if(filled()){
+	      var bx=el('div','md-wb-box'); bx.appendChild(para('Niedrigste Intensität heißt höchste Priorität. Ihr primärer Typ für die nächsten 90 Tage: '+TY[prim()].n+'.')); stage.appendChild(bx);
+	    }
+	    var ok=filled()&&prim()!==null;
+	    var warn=para('','md-wb-hint'); stage.appendChild(navRow(true,'Weiter zum Interventionsplan',function(){ if(!ok){warn.textContent='Bitte bewerten Sie alle vier Typen'+(filled()?' und wählen Sie bei Gleichstand einen Typ':'')+'.'; return;} goto(2);})); stage.appendChild(warn);
+	    return;
+	  }
+	  if(s===2){
+	    var p=prim(); if(p===null){goto(1); return;}
+	    var t=TY[p];
+	    stage.appendChild(el('p','md-kicker','Schritt 2 von 4 · Interventionsplan'));
+	    stage.appendChild(el('h2',null,t.n+': '+t.sub));
+	    stage.appendChild(para('Theorie, die nicht in Handlung übersetzt wird, bleibt Theorie. Formulieren Sie die Maßnahme so konkret und personenbezogen wie möglich.'));
+	    var c=el('div','md-wb-type'); c.appendChild(el('h3',null,'Maßnahme')); c.appendChild(para(t.m));
+	    if(!st.plan[t.k]) st.plan[t.k]={};
+	    t.f.forEach(function(fl,fi){var l=el('label','md-wb-l',fl); var id='wbf'+fi; l.htmlFor=id; var inp=el('input'); inp.type=/datum/i.test(fl)?'date':'text'; inp.id=id; inp.value=st.plan[t.k][fi]||''; inp.addEventListener('input',function(){st.plan[t.k][fi]=inp.value.slice(0,300); save();}); c.appendChild(l); c.appendChild(inp);});
+	    c.appendChild(el('h3',null,'Was ich nicht tue')); var ul=el('ul','md-wb-not'); t.not.forEach(function(x){ul.appendChild(el('li',null,x));}); c.appendChild(ul);
+	    var l2=el('label','md-wb-l','Meine Notiz zum Plan (optional)'); l2.htmlFor='wbpn'; var ta=el('textarea'); ta.id='wbpn'; ta.value=st.planNote||''; ta.addEventListener('input',function(){st.planNote=ta.value.slice(0,800); save();}); c.appendChild(l2); c.appendChild(ta);
+	    stage.appendChild(c);
+	    var bx=el('div','md-wb-box'); var b1=el('p'); var sb=el('b',null,'Stolperfalle. '); b1.appendChild(sb); b1.appendChild(document.createTextNode(t.trap)); bx.appendChild(b1); stage.appendChild(bx);
+	    stage.appendChild(el('h3',null,'Die drei anderen Pläne'));
+	    TY.forEach(function(o,j){ if(j===p) return; var d=el('details','md-wb-noprint'); d.appendChild(el('summary',null,o.n+': '+o.sub)); d.appendChild(para('Maßnahme: '+o.m+' ('+o.f.join(', ')+')')); var u=el('ul','md-wb-not'); o.not.forEach(function(x){u.appendChild(el('li',null,x));}); d.appendChild(para('Was ich nicht tue:')); d.appendChild(u); d.appendChild(para('Stolperfalle: '+o.trap)); stage.appendChild(d);});
+	    stage.appendChild(navRow(true,'Weiter zum 90-Tage-Plan',function(){goto(3);}));
+	    return;
+	  }
+	  if(s===3){
+	    stage.appendChild(el('p','md-kicker','Schritt 3 von 4'));
+	    stage.appendChild(el('h2',null,'Ihre 90 Tage'));
+	    stage.appendChild(para('Nicht alle vier Typen gleichzeitig aktivieren, sondern einen konsistenten Einstieg wählen. Neunzig Tage sind lang genug für echte Veränderung und kurz genug, um fokussiert zu bleiben. Was zählt, ist das Sigma: die Konsistenz über die gesamten 90 Tage.'));
+	    if(!st.start) {st.start=nextMonday(); save();}
+	    var l=el('label','md-wb-l','Startdatum (Tag 1)'); l.htmlFor='wbst'; var inp=el('input'); inp.type='date'; inp.id='wbst'; inp.value=st.start; inp.style.maxWidth='14rem';
+	    inp.addEventListener('change',function(){ if(inp.value){st.start=inp.value; save(); render();} }); stage.appendChild(l); stage.appendChild(inp);
+	    var tb=el('table','md-wb-t'); var th=el('tr'); ['Phase','Fokus','Checkpoint'].forEach(function(x){th.appendChild(el('th',null,x));}); var thead=el('thead'); thead.appendChild(th); tb.appendChild(thead); var tbody=el('tbody');
+	    PH.forEach(function(ph){var tr=el('tr'); tr.appendChild(el('td',null,ph.t)); tr.appendChild(el('td',null,ph.f)); var td=el('td'); var bb=el('b',null,fmt(addDays(st.start,ph.d-1))); td.appendChild(bb); td.appendChild(el('br')); td.appendChild(document.createTextNode(ph.c)); tr.appendChild(td); tbody.appendChild(tr);}); tb.appendChild(tbody); stage.appendChild(tb);
+	    var bx=el('div','md-wb-box'); bx.appendChild(para('Nahezu jede Friction-Einführung löst in Phase 2 Widerstand aus. Das ist keine Warnung, dass etwas falsch läuft, es ist der Beweis, dass Friction wirkt. Die einzige Frage, die dann zählt: Halte ich das Prinzip, oder halte ich das kurzfristige Ergebnis?')); stage.appendChild(bx);
+	    var n=el('div','md-wb-nav md-wb-noprint'); n.appendChild(btn('Checkpoints in den Kalender (.ics)','md-wb-go',ics)); stage.appendChild(n);
+	    stage.appendChild(navRow(true,'Weiter zu Exit-ready',function(){goto(4);}));
+	    return;
+	  }
+	  if(s===4){
+	    stage.appendChild(el('p','md-kicker','Schritt 4 von 4'));
+	    stage.appendChild(el('h2',null,'Exit-ready: Wie unabhängig ist Ihr Unternehmen von Ihnen?'));
+	    stage.appendChild(para('Exit-ready heißt nicht, das Unternehmen zu verlassen, sondern die Option zu haben. CEO-Abhängigkeit ist auch ein Bewertungsproblem: Unternehmen, die in allen vier Dimensionen vom CEO abhängen, erhalten bei Transaktionen einen Key-Person-Risk-Abschlag von 20 bis 40 Prozent. Bewerten Sie jede Dimension von 0 bis 10; 8 bis 10 heißt, der Indikator trifft voll zu.'));
+	    var out=el('div'); var sc=el('p','md-wb-score'); var ap=el('span','md-wb-amp');
+	    function upd(){var s=exSum(), a=amp(s); sc.textContent=s+' von 40'; ap.textContent=a[0]; ap.style.background=a[1];}
+	    EX.forEach(function(x,j){var r=el('div','md-wb-ex'); var d=el('div'); d.appendChild(el('b',null,x.n)); d.appendChild(el('small',null,x.i+' ('+x.w+')')); r.appendChild(d); var rg=el('input'); rg.type='range'; rg.min=0; rg.max=10; rg.step=1; rg.value=st.exit[j]; rg.setAttribute('aria-label',x.n); var v=el('b','md-wb-v',String(st.exit[j])); rg.addEventListener('input',function(){st.exit[j]=+rg.value; v.textContent=rg.value; save(); upd();}); r.appendChild(rg); r.appendChild(v); stage.appendChild(r);});
+	    out.appendChild(sc); out.appendChild(ap); out.appendChild(para('Ziel 35 bis 40: exit-ready. 25 bis 34: auf Kurs. Unter 25: hohe Abhängigkeit.','md-wb-hint')); stage.appendChild(out); upd();
+	    stage.appendChild(navRow(true,'Zum Ergebnis',function(){goto(5);}));
+	    return;
+	  }
+	  if(s===5){
+	    var p=prim();
+	    stage.appendChild(el('p','md-kicker','Ergebnis'));
+	    stage.appendChild(el('h2',null,'Ihr Friction-Formel-Workbook'));
+	    if(p===null){stage.appendChild(para('Bitte bewerten Sie zuerst in Schritt 1 alle vier Typen.')); stage.appendChild(navRow(false,'Zu Schritt 1',function(){goto(1);})); return;}
+	    stage.appendChild(profile());
+	    var t=TY[p], pv=st.plan[t.k]||{};
+	    var sm=el('div','md-wb-box md-wb-sum'); sm.appendChild(el('p',null,'Primärer Typ: '+t.n+' ('+t.sub+')')); t.f.forEach(function(fl,fi){ if(pv[fi]) sm.appendChild(para(fl+': '+(/datum/i.test(fl)?fmt(new Date(pv[fi]+'T12:00:00')):pv[fi]))); }); if(st.planNote) sm.appendChild(para('Notiz: '+st.planNote)); stage.appendChild(sm);
+	    if(st.start){var tb=el('table','md-wb-t'); var tbody=el('tbody'); PH.forEach(function(ph){var tr=el('tr'); tr.appendChild(el('td',null,ph.t)); tr.appendChild(el('td',null,'Checkpoint '+fmt(addDays(st.start,ph.d-1)))); tbody.appendChild(tr);}); tb.appendChild(tbody); stage.appendChild(tb);}
+	    var s4=exSum(), a=amp(s4); var ex=el('p'); ex.appendChild(el('b',null,'Exit-Readiness-Score: '+s4+' von 40 ')); var ap=el('span','md-wb-amp',a[0]); ap.style.background=a[1]; ex.appendChild(ap); stage.appendChild(ex);
+	    var q=el('div','md-wb-box'); q.appendChild(para('Die Frage, die am Ende zählt: Welche drei Entscheidungen haben Sie diese Woche getroffen, die Ihr Team hätte treffen können, und sollen?')); stage.appendChild(q);
+	    var n=el('div','md-wb-nav md-wb-noprint'); n.appendChild(btn('Drucken oder als PDF speichern','md-wb-go',function(){window.print();})); if(st.start) n.appendChild(btn('Checkpoints in den Kalender (.ics)','md-wb-back',ics)); stage.appendChild(n);
+	    stage.appendChild(mailBox(p));
+	    var bk=el('p','md-wb-hint md-wb-noprint'); bk.appendChild(document.createTextNode('Die vollständige Methode mit allen 18 Kapiteln steht im Buch „Komfort erstickt Führung“. ')); var al=el('a',null,'Buch bestellen'); al.href=AMZ; al.target='_blank'; al.rel='noopener'; bk.appendChild(al); stage.appendChild(bk);
+	    stage.appendChild(navRow(true,null,null));
+	  }
+	}
+	function ics(){
+	  if(!st.start) return; var p=prim(); var t=p!==null?TY[p].n:'Friction-Formel';
+	  function d8(d){return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2);}
+	  function esc(s){return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+	  var now=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+	  var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//markusdirr.com//Friction-Workbook//DE','CALSCALE:GREGORIAN'];
+	  PH.forEach(function(ph,j){var d=addDays(st.start,ph.d-1), e=addDays(st.start,ph.d);
+	    L.push('BEGIN:VEVENT','UID:md-wb-'+d8(d)+'-'+j+'@markusdirr.com','DTSTAMP:'+now,'DTSTART;VALUE=DATE:'+d8(d),'DTEND;VALUE=DATE:'+d8(e),'SUMMARY:'+esc('Friction-Checkpoint Tag '+ph.d+': '+t),'DESCRIPTION:'+esc(ph.t+'\n'+ph.c+'\n\nWorkbook: https://markusdirr.com/friction-formel/workbook/'),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc('Friction-Checkpoint Tag '+ph.d),'TRIGGER:PT9H','END:VALARM','END:VEVENT');});
+	  L.push('END:VCALENDAR');
+	  var blob=new Blob([L.join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='friction-90-tage-checkpoints.ics'; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},500);
+	}
+	function mailBox(p){
+	  var w=el('form','md-wb-mail md-wb-noprint'); w.noValidate=true;
+	  w.appendChild(el('p','md-kicker','Ergebnis per Mail'));
+	  w.appendChild(para('Sie erhalten die Zusammenfassung mit Ihren Checkpoint-Terminen als Mail.'));
+	  var l=el('label','md-wb-l','E-Mail'); l.htmlFor='wbmail'; var inp=el('input'); inp.type='email'; inp.id='wbmail'; inp.required=true; inp.autocomplete='email'; w.appendChild(l); w.appendChild(inp);
+	  var hp=el('input'); hp.type='text'; hp.name='website'; hp.tabIndex=-1; hp.autocomplete='off'; hp.style.cssText='position:absolute;left:-9999px;height:0;width:0;opacity:0'; hp.setAttribute('aria-hidden','true'); w.appendChild(hp);
+	  var c=el('label','md-wb-chk'); var cb=el('input'); cb.type='checkbox'; c.appendChild(cb); var sp=el('span'); sp.appendChild(document.createTextNode('Ich bin einverstanden, dass meine E-Mail-Adresse und mein Ergebnis für den Versand der Auswertung gespeichert werden. Details in der ')); var dl=el('a',null,'Datenschutzerklärung'); dl.href='/datenschutz/'; sp.appendChild(dl); sp.appendChild(document.createTextNode('.')); c.appendChild(sp); w.appendChild(c);
+	  var sb=el('button','md-wb-go','Ergebnis senden'); sb.type='submit'; w.appendChild(sb); var msg=el('p','md-wb-hint'); w.appendChild(msg);
+	  w.addEventListener('submit',function(ev){ev.preventDefault();
+	    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(inp.value.trim())){msg.textContent='Bitte eine gültige E-Mail-Adresse eingeben.'; return;}
+	    if(!cb.checked){msg.textContent='Bitte die Einwilligung bestätigen.'; return;}
+	    var t=TY[p], pv=st.plan[t.k]||{};
+	    var erg={profil:st.int.slice(),primaer:t.k,plan:t.f.map(function(fl,fi){return [fl,String(pv[fi]||'')];}),notiz:String(st.planNote||'').slice(0,800),start:st.start||'',exit:st.exit.slice()};
+	    sb.disabled=true; msg.textContent='Wird gesendet …';
+	    fetch(HOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({typ:'workbook',email:inp.value.trim(),ergebnis:erg,website:hp.value,seite:location.pathname,zeit:new Date().toISOString()})})
+	      .then(function(r){return r.json().catch(function(){return {};});})
+	      .then(function(j){ if(j&&j.ok===false){msg.textContent='Das hat nicht geklappt. Bitte prüfen Sie Ihre Eingaben.'; sb.disabled=false; return;} w.textContent=''; w.appendChild(para('Danke. Ihr Ergebnis ist unterwegs in Ihr Postfach.')); })
+	      .catch(function(){msg.textContent='Das hat nicht geklappt. Bitte versuchen Sie es später erneut oder schreiben Sie an hello@markusdirr.com.'; sb.disabled=false;});
+	  });
+	  return w;
+	}
+	render();
+	})();
+	</script>
+	<?php
+	return ob_get_clean();
+} );
